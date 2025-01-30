@@ -6,4 +6,11 @@ engine = create_engine(url , echo = True)
 
 Base = declarative_base()
 
-Session = sessionmaker()   
+Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+
+def get_db():
+    db = Session()
+    try:
+        yield db
+    finally:
+        db.close()

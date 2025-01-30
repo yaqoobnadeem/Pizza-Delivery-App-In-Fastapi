@@ -12,7 +12,7 @@ class User(Base):
     is_staff = Column(Boolean, default=False)
     is_active = Column(Boolean, default=False)
     orders = relationship("Choice", back_populates="user")  
-    
+      
     def __repr__(self):
         return f"<User {self.username}>"
 

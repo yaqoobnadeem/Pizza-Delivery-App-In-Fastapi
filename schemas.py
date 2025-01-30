@@ -1,7 +1,5 @@
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr
 from typing import Optional
-import re
-
 
 class SignupModel(BaseModel):
     user_id: Optional[int]
@@ -11,37 +9,41 @@ class SignupModel(BaseModel):
     is_staff: Optional[bool] = False
     is_active: Optional[bool] = True
 
-    @validator('username')
-    def validate_username(cls, v):
-        if len(v) < 3 or len(v) > 25:
-            raise ValueError('Username must be between 3 and 25 characters')
-        if not v.isalnum():
-            raise ValueError('Username must only contain alphanumeric characters')
-        return v
-    
-    @validator('password')
-    def validate_password(cls, v):
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-        if not any(char.isupper() for char in v):
-            raise ValueError('Password must contain at least one uppercase letter')
-        if not any(char.isdigit() for char in v):
-            raise ValueError('Password must contain at least one number')
-        if not any(char in '!@#$%^&*()_+-=[]{}|;:,.<>?/' for char in v):
-            raise ValueError('Password must contain at least one special character')
-        return v
+    def __init__(self, **data):
+        super().__init__(**data)
 
-    @validator('email')
-    def validate_email_domain(cls, v):
+        if self.user_id is not None and self.user_id <= 0:
+            raise ValueError('user_id must be a positive integer')
+
+        
+        if len(self.username) < 3 or len(self.username) > 25:
+            raise ValueError('Username must be between 3 and 25 characters')
+        if not self.username.isalnum():
+            raise ValueError('Username must only contain alphanumeric characters')
+
         valid_domains = ['example.com', 'domain.com']
-        domain = v.split('@')[-1]
+        domain = self.email.split('@')[-1]
         if domain not in valid_domains:
             raise ValueError(f'Email domain must be one of {", ".join(valid_domains)}')
-        return v
-
-    @validator('is_staff', 'is_active', pre=True, always=True)
-    def validate_boolean(cls, v):
-        return v if v is not None else False
 
     class Config:
-        orm_mode = True
+        from_attributes = True  
+
+class Settings(BaseModel):
+    authjwt_secret_key: str = '8bfcdc4196b345f02b33d21250afb3ff589a98a7dd3a26ddde3874a1b9a894d0'
+
+class LoginModel(BaseModel):
+    username: str
+    password: str
+
+class OrderModel(BaseModel):
+    order_id : Optional[int]
+    quantity : int
+    order_status : Optional[str] = "PENDING" 
+    pizza_sizes : Optional[str] = "SMALL"
+    user_id : Optional[int]
+    
+    class Config:
+        orm_model  = True
+      
+    
